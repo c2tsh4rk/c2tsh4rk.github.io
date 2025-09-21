@@ -1,11 +1,21 @@
+
+
 <!DOCTYPE html>
-<html lang=zh>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
 <head>
-    <!-- so meta -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://avatars.githubusercontent.com/u/169673987?v=4">
+  <link rel="icon" href="https://avatars.githubusercontent.com/u/169673987?v=4">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="c2tsh4rk">
+  <meta name="keywords" content="">
+  
     <meta name="description" content="Introduction to PostgreSQL引言在本模块中，我们将探讨一些 advanced SQL injection 技术以及从 white-box approach 角度出发的 PostgreSQL 特定攻击。由于这是一个高级模块，期望读者具备 SQL 语法、SQL 注入和 Python3 的基础知识，以便全面理解所解释的概念。尽管本模块将重点放在 PostgreSQL 上，但同样的">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Advanced SQL Injections">
@@ -22,336 +32,672 @@
 <meta property="article:modified_time" content="2025-09-19T09:19:44.040Z">
 <meta property="article:author" content="c2tsh4rk">
 <meta property="article:tag" content="CWEE">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/c2tsh4rk/img/main/0-20250909161611300.png">
-    
-    
-      
-        
-          <link rel="shortcut icon" href="/images/favicon.ico">
-        
-      
-      
-        
-          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
-        
-      
-      
-        
-          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
-        
-      
-    
-    <!-- title -->
-    <title>Advanced SQL Injections</title>
-    <!-- async scripts -->
-    <!-- Google Analytics -->
+  
+  
+  
+  <title>Advanced SQL Injections - Try Harder!</title>
 
-
-    <!-- Umami Analytics -->
-
-
-    <!-- styles -->
-    
-<link rel="stylesheet" href="/css/style.css">
-
-    <!-- persian styles -->
-    
-    <!-- rss -->
-    
-    
-	<!-- mathjax -->
-	
-<meta name="generator" content="Hexo 7.2.0"></head>
-
-<body class="max-width mx-auto px3 ltr">
-    
-      <div id="header-post">
-  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
-  <span id="menu">
-    <span id="nav">
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/about/">关于</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     --><!--
-       --><li><a target="_blank" rel="noopener" href="http://github.com/c2tsh4rk">项目</a></li><!--
-     -->
-      </ul>
-    </span>
-    <br/>
-    <span id="actions">
-      <ul>
-        
-        <li><a class="icon" aria-label="上一篇" href="/2025/09/12/%E6%81%B6%E6%84%8F%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
-        
-        
-        <li><a class="icon" aria-label="下一篇" href="/2025/09/01/HTB-Support/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
-        
-        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
-        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
-      </ul>
-      <span id="i-prev" class="info" style="display:none;">上一篇</span>
-      <span id="i-next" class="info" style="display:none;">下一篇</span>
-      <span id="i-top" class="info" style="display:none;">返回顶部</span>
-      <span id="i-share" class="info" style="display:none;">分享文章</span>
-    </span>
-    <br/>
-    <div id="share" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&text=Advanced SQL Injections"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&is_video=false&description=Advanced SQL Injections"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=Advanced SQL Injections&body=Check out this article: http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&name=Advanced SQL Injections&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&t=Advanced SQL Injections"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
-</ul>
-
-    </div>
-    
-    
-      <div id="toc">
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Introduction-to-PostgreSQL"><span class="toc-number">1.</span> <span class="toc-text">Introduction to PostgreSQL</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%95%E8%A8%80"><span class="toc-number">1.1.</span> <span class="toc-text">引言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E-PostgreSQL-%E4%BA%A4%E4%BA%92"><span class="toc-number">1.2.</span> <span class="toc-text">与 PostgreSQL 交互</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#psql-PostgreSQL-Interactive-Terminal"><span class="toc-number">1.2.0.1.</span> <span class="toc-text">psql (PostgreSQL Interactive Terminal)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#pgAdmin4"><span class="toc-number">1.2.0.2.</span> <span class="toc-text">pgAdmin4</span></a></li></ol></li></ol></li></ol></li></ol>
-      </div>
-    
-  </span>
-</div>
-
-    
-    <div class="content index py4 ">
-        
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-  <header>
-    
-    <h1 class="posttitle p-name" itemprop="name headline">
-        Advanced SQL Injections
-    </h1>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-    <div class="meta">
-      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span class="p-name" itemprop="name">c2tsh4rk</span>
-      </span>
-      
-    <div class="postdate">
-      
-        <time datetime="2025-09-09T08:13:05.000Z" class="dt-published" itemprop="datePublished">2025-09-09</time>
-        
-        (Updated: <time datetime="2025-09-19T09:19:44.040Z" class="dt-updated" itemprop="dateModified">2025-09-19</time>)
-        
-      
-    </div>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
 
-      
-    <div class="article-category">
-        <i class="fa-solid fa-archive"></i>
-        <a class="category-link" href="/categories/CWEE/">CWEE</a>
-    </div>
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
 
 
-      
-    <div class="article-tag">
-        <i class="fa-solid fa-tag"></i>
-        <a class="p-category" href="/tags/CWEE/" rel="tag">CWEE</a>
-    </div>
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
 
 
-    </div>
-  </header>
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
   
 
-  <div class="content e-content" itemprop="articleBody">
-    <h1 id="Introduction-to-PostgreSQL"><a href="#Introduction-to-PostgreSQL" class="headerlink" title="Introduction to PostgreSQL"></a>Introduction to PostgreSQL</h1><h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>在本模块中，我们将探讨一些 <code>advanced SQL injection</code> 技术以及从 <code>white-box approach</code> 角度出发的 <a target="_blank" rel="noopener" href="https://www.postgresql.org/">PostgreSQL</a> 特定攻击。由于这是一个高级模块，期望读者具备 SQL 语法、SQL 注入和 Python3 的基础知识，以便全面理解所解释的概念。尽管本模块将重点放在 <code>PostgreSQL</code> 上，但同样的技术可以适应于其他 SQL 变体，因为 SQL 是一种标准化的语言。</p>
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"c2tsh4rk.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"gtag":null},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Try Harder!</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://raw.githubusercontent.com/c2tsh4rk/img/main/catcat.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Advanced SQL Injections"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-09-09 16:13" pubdate>
+          2025年9月9日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          972 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          9 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Advanced SQL Injections</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="Introduction-to-PostgreSQL"><a href="#Introduction-to-PostgreSQL" class="headerlink" title="Introduction to PostgreSQL"></a>Introduction to PostgreSQL</h1><h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>在本模块中，我们将探讨一些 <code>advanced SQL injection</code> 技术以及从 <code>white-box approach</code> 角度出发的 <a target="_blank" rel="noopener" href="https://www.postgresql.org/">PostgreSQL</a> 特定攻击。由于这是一个高级模块，期望读者具备 SQL 语法、SQL 注入和 Python3 的基础知识，以便全面理解所解释的概念。尽管本模块将重点放在 <code>PostgreSQL</code> 上，但同样的技术可以适应于其他 SQL 变体，因为 SQL 是一种标准化的语言。</p>
 <h2 id="与-PostgreSQL-交互"><a href="#与-PostgreSQL-交互" class="headerlink" title="与 PostgreSQL 交互"></a>与 PostgreSQL 交互</h2><p>在深入了解注入漏洞之前，我们先花点时间熟悉一下与 <code>PostgreSQL</code> 数据库交互的两个最常用工具：psql 和 <a target="_blank" rel="noopener" href="https://www.pgadmin.org/">pgAdmin4</a>。</p>
 <h4 id="psql-PostgreSQL-Interactive-Terminal"><a href="#psql-PostgreSQL-Interactive-Terminal" class="headerlink" title="psql (PostgreSQL Interactive Terminal)"></a>psql (PostgreSQL Interactive Terminal)</h4><p><a target="_blank" rel="noopener" href="https://www.postgresql.org/docs/current/app-psql.html">psql</a> 是一个与 <code>PostgreSQL</code> 数据库交互的 <code>command-line</code> 工具，它随 <code>PostgreSQL</code> 服务器预打包，并可在 <code>Linux</code> 或 <code>Windows</code> 上运行。</p>
 <p>您可以使用以下单个命令在 <code>Linux</code> 发行版上安装 <code>psql</code> ：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">c2tt@htb[/htb]$ sudo apt install postgresql-client-15</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">c2tt@htb[/htb]$ sudo apt install postgresql-client-15<br></code></pre></td></tr></table></figure>
 
 <p>要在 <code>Windows</code> 上安装 <code>psql</code> ，您应首先从 postgresql.org 下载 <code>PostgreSQL</code> 安装程序，然后在安装过程中取消选择除 <code>Command Line Tools</code> 以外的所有选项。</p>
-<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/0-20250909161611300.png" alt="Setup window for selecting components to install. Options include PostgreSQL Server, pgAdmin 4, Stack Builder, and Command Line Tools (checked). Buttons for Back, Next, and Cancel."></p>
+<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/0-20250909161611300.png" srcset="/img/loading.gif" lazyload alt="Setup window for selecting components to install. Options include PostgreSQL Server, pgAdmin 4, Stack Builder, and Command Line Tools (checked). Buttons for Back, Next, and Cancel."></p>
 <p>安装完成后，您可以从安装目录（默认为 <code>C:\Program Files\PostgreSQL\15\bin</code> ）使用 <code>psql.exe</code> ，或者将该目录添加到系统 <code>PATH</code> 变量中，以便从任何地方使用它：</p>
-<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/1-20250909161639788.png" alt="Steps to edit environment variables in Windows."></p>
+<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/1-20250909161639788.png" srcset="/img/loading.gif" lazyload alt="Steps to edit environment variables in Windows."></p>
 <p>在您选择的操作系统上安装 <code>psql</code> 后，可以使用以下命令连接到 <code>PostgreSQL</code> 数据库：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">c2tt@htb[/htb]$ psql -h 127.0.0.1 [-p PORT] -U acdbuser acmecorp</span><br><span class="line">Password <span class="keyword">for</span> user acdbuser: </span><br><span class="line">psql (15.1 (Debian 15.1-1+b1), server 13.9 (Debian 13.9-0+deb11u1))</span><br><span class="line">SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)</span><br><span class="line">Type <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> <span class="built_in">help</span>.</span><br><span class="line"></span><br><span class="line">acmecorp=&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs bash">c2tt@htb[/htb]$ psql -h 127.0.0.1 [-p PORT] -U acdbuser acmecorp<br>Password <span class="hljs-keyword">for</span> user acdbuser: <br>psql (15.1 (Debian 15.1-1+b1), server 13.9 (Debian 13.9-0+deb11u1))<br>SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)<br>Type <span class="hljs-string">&quot;help&quot;</span> <span class="hljs-keyword">for</span> <span class="hljs-built_in">help</span>.<br><br>acmecorp=&gt;<br></code></pre></td></tr></table></figure>
 
 <p>连接后，您可以使用 <code>\l</code> 命令列出数据库，或使用 <code>\l+</code> 获取详细信息。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">acmecorp=&gt; \l</span><br><span class="line">                                             List of databases</span><br><span class="line">   Name    |  Owner   | Encoding | Collate |  Ctype  | ICU Locale | Locale Provider |   Access privileges   </span><br><span class="line">-----------+----------+----------+---------+---------+------------+-----------------+-----------------------</span><br><span class="line"> acmecorp  | postgres | UTF8     | C.UTF-8 | C.UTF-8 |            | libc            | </span><br><span class="line"> postgres  | postgres | UTF8     | C.UTF-8 | C.UTF-8 |            | libc            | </span><br><span class="line"> template0 | postgres | UTF8     | C.UTF-8 | C.UTF-8 |            | libc            | =c/postgres          +</span><br><span class="line">           |          |          |         |         |            |                 | postgres=CTc/postgres</span><br><span class="line"> template1 | postgres | UTF8     | C.UTF-8 | C.UTF-8 |            | libc            | =c/postgres          +</span><br><span class="line">           |          |          |         |         |            |                 | postgres=CTc/postgres</span><br><span class="line">(4 rows)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs bash">acmecorp=&gt; \l<br>                                             List of databases<br>   Name    |  Owner   | Encoding | Collate |  Ctype  | ICU Locale | Locale Provider |   Access privileges   <br>-----------+----------+----------+---------+---------+------------+-----------------+-----------------------<br> acmecorp  | postgres | UTF8     | C.UTF-8 | C.UTF-8 |            | libc            | <br> postgres  | postgres | UTF8     | C.UTF-8 | C.UTF-8 |            | libc            | <br> template0 | postgres | UTF8     | C.UTF-8 | C.UTF-8 |            | libc            | =c/postgres          +<br>           |          |          |         |         |            |                 | postgres=CTc/postgres<br> template1 | postgres | UTF8     | C.UTF-8 | C.UTF-8 |            | libc            | =c/postgres          +<br>           |          |          |         |         |            |                 | postgres=CTc/postgres<br>(4 rows)<br></code></pre></td></tr></table></figure>
 
 <p>要切换到数据库，可以使用 <code>\c &lt;DATABASE&gt;</code> 命令。在这种情况下，我们已经位于 <code>acmecorp</code> 数据库中。</p>
 <p>要列出数据库中的表（切换到该数据库后），可以使用 <code>\dt</code> 命令或 <code>\dt+</code> 命令以获取扩展信息。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">acmecorp=&gt; \dt+</span><br><span class="line">                                        List of relations</span><br><span class="line"> Schema |    Name     | Type  |  Owner   | Persistence | Access method |    Size    | Description </span><br><span class="line">--------+-------------+-------+----------+-------------+---------------+------------+-------------</span><br><span class="line"> public | departments | table | postgres | permanent   | heap          | 8192 bytes | </span><br><span class="line"> public | dept_emp    | table | postgres | permanent   | heap          | 72 kB      | </span><br><span class="line"> public | employees   | table | postgres | permanent   | heap          | 176 kB     | </span><br><span class="line"> public | salaries    | table | postgres | permanent   | heap          | 72 kB      | </span><br><span class="line"> public | titles      | table | postgres | permanent   | heap          | 80 kB      | </span><br><span class="line">(5 rows)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs bash">acmecorp=&gt; \dt+<br>                                        List of relations<br> Schema |    Name     | Type  |  Owner   | Persistence | Access method |    Size    | Description <br>--------+-------------+-------+----------+-------------+---------------+------------+-------------<br> public | departments | table | postgres | permanent   | heap          | 8192 bytes | <br> public | dept_emp    | table | postgres | permanent   | heap          | 72 kB      | <br> public | employees   | table | postgres | permanent   | heap          | 176 kB     | <br> public | salaries    | table | postgres | permanent   | heap          | 72 kB      | <br> public | titles      | table | postgres | permanent   | heap          | 80 kB      | <br>(5 rows)<br></code></pre></td></tr></table></figure>
 
 <p>最后但同样重要的是，您只需输入查询并以分号结尾，即可轻松查询数据库。多行查询也同样适用。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">acmecorp=&gt; SELECT first_name, last_name, email FROM employees LIMIT 5;</span><br><span class="line"> first_name |  last_name  |           email           </span><br><span class="line">------------+-------------+---------------------------</span><br><span class="line"> Kathleen   | Flint       | knflint82@acme.corp</span><br><span class="line"> Henry      | Watson      | hywatson40@acme.corp</span><br><span class="line"> Ruth       | Perez       | rhperez84@acme.corp</span><br><span class="line"> Leon       | Tappin      | lntappin80@acme.corp</span><br><span class="line"> Donita     | Fairweather | dafairweather92@acme.corp</span><br><span class="line">(5 rows)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs bash">acmecorp=&gt; SELECT first_name, last_name, email FROM employees LIMIT 5;<br> first_name |  last_name  |           email           <br>------------+-------------+---------------------------<br> Kathleen   | Flint       | knflint82@acme.corp<br> Henry      | Watson      | hywatson40@acme.corp<br> Ruth       | Perez       | rhperez84@acme.corp<br> Leon       | Tappin      | lntappin80@acme.corp<br> Donita     | Fairweather | dafairweather92@acme.corp<br>(5 rows)<br></code></pre></td></tr></table></figure>
 
 <h4 id="pgAdmin4"><a href="#pgAdmin4" class="headerlink" title="pgAdmin4"></a>pgAdmin4</h4><p><a target="_blank" rel="noopener" href="https://www.pgadmin.org/">pgAdmin4</a> 是一个用于与 <code>PostgreSQL</code> 数据库交互的 <code>GUI</code> 应用程序，适用于 <code>Linux</code> 和 <code>Windows</code> 平台。</p>
 <p>要在 <code>Linux</code> 上安装 <code>pgAdmin4</code> ，请运行以下命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">c2tt@htb[/htb]$ curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg</span><br><span class="line">c2tt@htb[/htb]$ sudo sh -c <span class="string">&#x27;echo &quot;deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main&quot; &gt; /etc/apt/sources.list.d/pgadmin4.list &amp;&amp; apt update&#x27;</span></span><br><span class="line">c2tt@htb[/htb]$ sudo apt install pgadmin4</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">c2tt@htb[/htb]$ curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg<br>c2tt@htb[/htb]$ sudo sh -c <span class="hljs-string">&#x27;echo &quot;deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main&quot; &gt; /etc/apt/sources.list.d/pgadmin4.list &amp;&amp; apt update&#x27;</span><br>c2tt@htb[/htb]$ sudo apt install pgadmin4<br></code></pre></td></tr></table></figure>
 
 <p>注意：如果您使用的是 <code>Kali</code> 或 <code>ParrotOS</code> （例如 <code>Pwnbox</code> ），您需要将第二个命令中的 <code>$(lsb_release -cs)</code> 替换为 <code>bullseye</code> ，否则安装将失败。</p>
 <p>要在 <code>Windows</code> 上安装 <code>pgAdmin4</code> ，您可以从 pgadmin.org 下载安装程序并按照安装步骤进行，或者您可以重复使用我们安装 <code>psql.exe</code> 时所用的安装程序，只需确保在安装过程中勾选 <code>pgAdmin4</code> 选项即可。</p>
 <p>首次启动 <code>pgAdmin4</code> 时，您需要设置一个主密码。这主要是为了保护您后续用于连接数据库的凭证。</p>
-<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/2-20250909165943694.png" alt="pgAdmin interface prompting to set a master password for securing and unlocking saved passwords and credentials. Input field with Cancel and OK buttons."></p>
+<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/2-20250909165943694.png" srcset="/img/loading.gif" lazyload alt="pgAdmin interface prompting to set a master password for securing and unlocking saved passwords and credentials. Input field with Cancel and OK buttons."></p>
 <p>要连接到 <code>PostgreSQL</code> 服务器，请前往 <code>Dashboard &gt; Add New Server</code> ，填写详细信息并按下 <code>Save</code> 。</p>
-<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/3-20250909170008121.png" alt="pgAdmin &quot;Register - Server&quot; window under the Connection tab. Fields for host name/address (127.0.0.1), port (5432), maintenance database, username, password, and options for Kerberos authentication and saving password. Close, Reset, and Save buttons."></p>
+<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/3-20250909170008121.png" srcset="/img/loading.gif" lazyload alt="pgAdmin &quot;Register - Server&quot; window under the Connection tab. Fields for host name/address (127.0.0.1), port (5432), maintenance database, username, password, and options for Kerberos authentication and saving password. Close, Reset, and Save buttons."></p>
 <p>完成此操作后，您可以在所选名称下的 <code>left-hand side</code> 访问 <code>server</code> 。通过此图形界面查看数据库和表非常直观，运行查询就像在 <code>database</code> 上 <code>right-clicking</code> 并选择 <code>Query Tool</code> 一样简单。</p>
-<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/6-20250909170030999.png" alt="pgAdmin interface showing a query on the &quot;acmecorp&quot; database. Query: SELECT * FROM employees WHERE LENGTH(username) &gt; 15;. Data output displays employee details like ID, username, email, password, first name, and last name."></p>
+<p><img src="https://raw.githubusercontent.com/c2tsh4rk/img/main/6-20250909170030999.png" srcset="/img/loading.gif" lazyload alt="pgAdmin interface showing a query on the &quot;acmecorp&quot; database. Query: SELECT * FROM employees WHERE LENGTH(username) &gt; 15;. Data output displays employee details like ID, username, email, password, first name, and last name."></p>
 <script>
     // trigger event
 var event = new Event('hexo-blog-decrypt');
 window.dispatchEvent(event);
 </script>
 
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CWEE/" class="category-chain-item">CWEE</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CWEE/" class="print-no-link">#CWEE</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Advanced SQL Injections</div>
+      <div>http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>c2tsh4rk</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年9月9日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
   </div>
-</article>
 
 
 
-        
-          <div id="footer-post-container">
-  <div id="footer-post">
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/09/12/%E6%81%B6%E6%84%8F%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80/" title="恶意软件开发基础">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">恶意软件开发基础</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/09/01/HTB-Support/" title="HTB-Support">
+                        <span class="hidden-mobile">HTB-Support</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
 
-    <div id="nav-footer" style="display: none">
-      <ul>
-        
-          <li><a href="/">首页</a></li>
-        
-          <li><a href="/about/">关于</a></li>
-        
-          <li><a href="/archives/">归档</a></li>
-        
-          <li><a target="_blank" rel="noopener" href="http://github.com/c2tsh4rk">项目</a></li>
-        
-      </ul>
-    </div>
-
-    
-    
-      <div id="toc-footer" style="display: none">
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Introduction-to-PostgreSQL"><span class="toc-number">1.</span> <span class="toc-text">Introduction to PostgreSQL</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%95%E8%A8%80"><span class="toc-number">1.1.</span> <span class="toc-text">引言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E-PostgreSQL-%E4%BA%A4%E4%BA%92"><span class="toc-number">1.2.</span> <span class="toc-text">与 PostgreSQL 交互</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#psql-PostgreSQL-Interactive-Terminal"><span class="toc-number">1.2.0.1.</span> <span class="toc-text">psql (PostgreSQL Interactive Terminal)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#pgAdmin4"><span class="toc-number">1.2.0.2.</span> <span class="toc-text">pgAdmin4</span></a></li></ol></li></ol></li></ol></li></ol>
+            
+          </article>
+        </div>
       </div>
-    
-
-    <div id="share-footer" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&text=Advanced SQL Injections"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&is_video=false&description=Advanced SQL Injections"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=Advanced SQL Injections&body=Check out this article: http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&title=Advanced SQL Injections"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&name=Advanced SQL Injections&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://c2tsh4rk.github.io/2025/09/09/Advanced-SQL-Injections/&t=Advanced SQL Injections"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
-</ul>
-
     </div>
 
-    <div id="actions-footer">
-        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
-        
-          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
-        
-        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
-        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
-    </div>
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
 
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-        
-        <footer id="footer">
-  <div class="footer-left">
-    Copyright &copy;
-    
-    
-    2022-2025
-    c2tsh4rk
-  </div>
-  <div class="footer-right">
-    <nav>
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/about/">关于</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     --><!--
-       --><li><a target="_blank" rel="noopener" href="http://github.com/c2tsh4rk">项目</a></li><!--
-     -->
-      </ul>
-    </nav>
-  </div>
-</footer>
 
 
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
     </div>
-    <!-- styles -->
+  </div>
+</div>
 
+    
 
+    
+  </main>
 
-  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
-
-
-    <!-- jquery -->
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
-
-
-
-
-<!-- clipboard -->
-
+  <footer>
+    <div class="footer-inner">
   
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
   
-  <script type="text/javascript">
-  $(function() {
-    // copy-btn HTML
-    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
-    btn += '<i class="fa-regular fa-clone"></i>';
-    btn += '</span>';
-    // mount it!
-    $(".highlight table").before(btn);
-    var clip = new ClipboardJS('.btn-copy', {
-      text: function(trigger) {
-        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
-      }
-    });
-    clip.on('success', function(e) {
-      e.trigger.setAttribute('aria-label', "复制成功！");
-      e.clearSelection();
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
-  })
   </script>
 
 
-<script src="/js/main.js"></script>
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-<!-- search -->
 
-<!-- Baidu Analytics -->
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
 
-<!-- Cloudflare Analytics -->
 
-<!-- Disqus Comments -->
 
-<!-- utterances Comments -->
 
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>
